@@ -1,0 +1,22 @@
+# Generated files
+/target/
+
+# The library shouldn't decide about the exact versions of dependencies, but let the downstream crate decide.
+Cargo.lock
+
+# Output files
+*.txt
+
+# Debug files
+**/*.rs.bk
+*.pdb
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db 

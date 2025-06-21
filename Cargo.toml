@@ -1,0 +1,32 @@
+[package]
+name = "practicerust2"
+version = "0.1.0"
+edition = "2021"
+description = "A simplified blockchain simulation for educational purposes"
+authors = ["ZUX Developer"]
+default-run = "practicerust2"
+
+# Define multiple binaries
+[[bin]]
+name = "practicerust2"
+path = "src/main.rs"
+
+[[bin]]
+name = "price_monitor"
+path = "src/price_monitor.rs"
+
+[dependencies]
+sha2 = "0.10" # SHA-2 cryptographic hash functions
+hex = "0.4"   # Convert hash bytes to a human-readable hex string
+chrono = "0.4" # Time handling utilities
+rand = "0.8.5" # Secure random number generation
+num-traits = "0.2" # Numeric trait implementations
+thiserror = "1.0" # Error handling utilities
+log = "0.4" # Logging framework
+simple_logger = "4.2" # Simple logger implementation
+once_cell = "1.18" # Thread-safe lazy initialized values
+ed25519-dalek = { version = "2.0.0", features = ["rand_core"] } # Ed25519 digital signature algorithm
+base64 = "0.13.0" # Base64 encoding/decoding
+tui = "0.19" # Terminal user interface library
+crossterm = "0.26" # Terminal manipulation library
+colored = "2.0" # Colored terminal text
