@@ -7,7 +7,7 @@ use std::thread;
 use std::io;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{self, Sender, Receiver};
+
 use sha2::{Sha256, Digest};
 use hex;
 use chrono::{TimeZone, FixedOffset, Utc};
@@ -573,6 +573,18 @@ struct AmmPool {
     k_constant: f64,
     fee_percent: f64,
     price_history: Vec<PricePoint>,
+    // Volume tracking
+    total_volume_usd: f64,      // Since inception
+    recent_volume_usd: f64,     // Last 5 seconds
+    last_volume_reset: u64,     // Timestamp of last 5s reset
+    // Price tracking for 5s and since inception
+    price_5s_high: f64,
+    price_5s_low: f64,
+    price_5s_open: f64,
+    price_inception_high: f64,
+    price_inception_low: f64,
+    price_inception_open: f64,
+    last_price_reset: u64,      // Timestamp of last 5s price reset
 }
 
 impl AmmPool {
@@ -592,6 +604,16 @@ impl AmmPool {
             k_constant,
             fee_percent,
             price_history: vec![PricePoint { timestamp, price: initial_price }],
+            total_volume_usd: 0.0,
+            recent_volume_usd: 0.0,
+            last_volume_reset: timestamp,
+            price_5s_high: initial_price,
+            price_5s_low: initial_price,
+            price_5s_open: initial_price,
+            price_inception_high: initial_price,
+            price_inception_low: initial_price,
+            price_inception_open: initial_price,
+            last_price_reset: timestamp,
         }
     }
     
@@ -637,6 +659,11 @@ impl AmmPool {
             return Err(BlockchainError::Transaction("Swap would result in too small output".to_string()));
         }
         
+        // Calculate USD values for volume tracking at current price
+        let current_price = self.get_zux_price();
+        let input_amount_usd = zux_amount * current_price;
+        let output_amount_usd = usd_output;
+        
         // Update reserves
         self.zux_reserve += zux_amount;
         self.usd_reserve -= usd_output;
@@ -658,6 +685,9 @@ impl AmmPool {
             self.price_history.remove(0);
         }
         
+        // Add volume tracking
+        self.add_volume(input_amount_usd, output_amount_usd);
+        
         Ok(usd_output)
     }
     
@@ -672,6 +702,11 @@ impl AmmPool {
         if zux_output < 0.000000001 {
             return Err(BlockchainError::Transaction("Swap would result in too small output".to_string()));
         }
+        
+        // Calculate USD values for volume tracking at current price
+        let current_price = self.get_zux_price();
+        let input_amount_usd = usd_amount;
+        let output_amount_usd = zux_output * current_price;
         
         // Update reserves
         self.usd_reserve += usd_amount;
@@ -694,6 +729,9 @@ impl AmmPool {
             self.price_history.remove(0);
         }
         
+        // Add volume tracking
+        self.add_volume(input_amount_usd, output_amount_usd);
+        
         Ok(zux_output)
     }
     
@@ -706,6 +744,56 @@ impl AmmPool {
         };
         
         self.price_history[start_idx..].to_vec()
+    }
+    
+    /// Add trading volume and update price tracking
+    fn add_volume(&mut self, input_amount_usd: f64, output_amount_usd: f64) {
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or(Duration::from_secs(0))
+            .as_secs();
+        
+        // Calculate total trade volume in USD (average of input/output to avoid double counting)
+        let trade_volume_usd = (input_amount_usd + output_amount_usd) / 2.0;
+        
+        // Add to total volume since inception
+        self.total_volume_usd += trade_volume_usd;
+        
+        // Reset 5s metrics if 5 seconds have passed
+        if current_time >= self.last_volume_reset + 5 {
+            self.recent_volume_usd = 0.0;
+            self.last_volume_reset = current_time;
+        }
+        
+        // Add to recent 5s volume
+        self.recent_volume_usd += trade_volume_usd;
+        
+        // Update price tracking
+        let current_price = self.get_zux_price();
+        
+        // Reset 5s price metrics if 5 seconds have passed
+        if current_time >= self.last_price_reset + 5 {
+            self.price_5s_high = current_price;
+            self.price_5s_low = current_price;
+            self.price_5s_open = current_price;
+            self.last_price_reset = current_time;
+        } else {
+            // Update 5s price ranges
+            if current_price > self.price_5s_high {
+                self.price_5s_high = current_price;
+            }
+            if current_price < self.price_5s_low {
+                self.price_5s_low = current_price;
+            }
+        }
+        
+        // Update inception price ranges
+        if current_price > self.price_inception_high {
+            self.price_inception_high = current_price;
+        }
+        if current_price < self.price_inception_low {
+            self.price_inception_low = current_price;
+        }
     }
 }
 
@@ -1541,6 +1629,226 @@ fn run_price_monitor(amm_pool: Arc<Mutex<AmmPool>>, stop_signal: Arc<Mutex<bool>
     Ok(())
 }
 
+// Import the explorer data structures
+mod blockchain_explorer {
+    use serde::{Deserialize, Serialize};
+    
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct BlockInfo {
+        pub id: u64,
+        pub hash: String,
+        pub parent_hash: String,
+        pub timestamp: u64,
+        pub transactions_count: usize,
+        pub difficulty: u64,
+        pub nonce: u64,
+        pub size_bytes: usize,
+        pub formatted_time: String,
+        pub network_name: String,
+        pub version: String,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct AmmInfo {
+        pub zux_reserve: f64,
+        pub usd_reserve: f64,
+        pub k_constant: f64,
+        pub current_price: f64,
+        pub total_liquidity: f64,
+        pub volume_5s: f64,
+        pub volume_total: f64,
+        pub price_5s_change: f64,
+        pub price_5s_high: f64,
+        pub price_5s_low: f64,
+        pub price_inception_change: f64,
+        pub price_inception_high: f64,
+        pub price_inception_low: f64,
+        pub fees_collected: f64,
+        pub swap_count: u64,
+        pub avg_trade_size: f64,
+        pub price_history: Vec<PricePoint>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct PricePoint {
+        pub timestamp: u64,
+        pub price: f64,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct WalletInfo {
+        pub address: String,
+        pub zux_balance: f64,
+        pub usdz_balance: f64,
+        pub total_value_usd: f64,
+        pub transaction_count: u64,
+        pub is_whale: bool,
+        pub is_mega_whale: bool,
+        pub last_activity: u64,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct SystemWalletInfo {
+        pub address: String,
+        pub zux_balance: f64,
+        pub usdz_balance: f64,
+        pub total_issued_zux: f64,
+        pub total_issued_usdz: f64,
+        pub active_wallets: u64,
+        pub total_transactions: u64,
+        pub network_hash_rate: f64,
+        pub avg_block_time: f64,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct ExplorerData {
+        pub blocks: Vec<BlockInfo>,
+        pub amm_info: AmmInfo,
+        pub wallets: Vec<WalletInfo>,
+        pub system_wallet: SystemWalletInfo,
+        pub last_update: u64,
+    }
+}
+
+/// Launch the blockchain explorer in a separate terminal window
+fn run_blockchain_explorer() -> Result<()> {
+    // Start the blockchain explorer in a separate process
+    std::process::Command::new("cmd")
+        .args(["/c", "start", "cmd", "/k", "cargo", "run", "--release", "--bin", "blockchain_explorer"])
+        .spawn()
+        .map_err(|e| BlockchainError::System(format!("Failed to start blockchain explorer: {}", e)))?;
+    
+    info!("Started blockchain explorer in a separate terminal window.");
+    Ok(())
+}
+
+/// Update explorer data file with current blockchain state
+fn update_explorer_data(
+    blocks: &[Block],
+    amm_pool: &AmmPool,
+    wallets: &HashMap<String, Wallet>,
+    system_wallet: &Wallet,
+    total_transactions: u64,
+    swap_count: u64,
+    fees_collected: f64,
+) -> Result<()> {
+    let current_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| BlockchainError::Time(format!("Time error: {}", e)))?
+        .as_secs();
+    
+    // Convert blocks to explorer format
+    let explorer_blocks: Vec<blockchain_explorer::BlockInfo> = blocks.iter()
+        .map(|block| blockchain_explorer::BlockInfo {
+            id: block.id,
+            hash: block.hash.clone(),
+            parent_hash: block.parent_hash.clone(),
+            timestamp: block.timestamp,
+            transactions_count: block.transactions.len(),
+            difficulty: block.difficulty,
+            nonce: block.nonce,
+            size_bytes: 512, // Estimated size
+            formatted_time: block.formatted_time.clone(),
+            network_name: block.network_name.clone(),
+            version: block.version.clone(),
+        })
+        .collect();
+    
+    // Calculate price changes
+    let current_price = amm_pool.get_zux_price();
+    let price_5s_change = if amm_pool.price_5s_open > 0.0 {
+        ((current_price - amm_pool.price_5s_open) / amm_pool.price_5s_open) * 100.0
+    } else { 0.0 };
+    let price_inception_change = if amm_pool.price_inception_open > 0.0 {
+        ((current_price - amm_pool.price_inception_open) / amm_pool.price_inception_open) * 100.0
+    } else { 0.0 };
+    
+    // Calculate average trade size
+    let avg_trade_size = if swap_count > 0 {
+        amm_pool.total_volume_usd / swap_count as f64
+    } else { 0.0 };
+    
+    // Convert AMM pool data
+    let explorer_amm = blockchain_explorer::AmmInfo {
+        zux_reserve: amm_pool.zux_reserve,
+        usd_reserve: amm_pool.usd_reserve,
+        k_constant: amm_pool.k_constant,
+        current_price,
+        total_liquidity: (amm_pool.zux_reserve * current_price) + amm_pool.usd_reserve, // Convert to USD equivalent
+        volume_5s: amm_pool.recent_volume_usd,
+        volume_total: amm_pool.total_volume_usd,
+        price_5s_change,
+        price_5s_high: amm_pool.price_5s_high,
+        price_5s_low: amm_pool.price_5s_low,
+        price_inception_change,
+        price_inception_high: amm_pool.price_inception_high,
+        price_inception_low: amm_pool.price_inception_low,
+        fees_collected,
+        swap_count,
+        avg_trade_size,
+        price_history: amm_pool.price_history.iter()
+            .map(|p| blockchain_explorer::PricePoint {
+                timestamp: p.timestamp,
+                price: p.price,
+            })
+            .collect(),
+    };
+    
+    // Convert wallet data (limit to most interesting wallets)
+    let mut explorer_wallets: Vec<blockchain_explorer::WalletInfo> = wallets.iter()
+        .filter(|(addr, _)| **addr != SYSTEM_WALLET_ADDRESS)
+        .map(|(addr, wallet)| {
+            let current_price = amm_pool.get_zux_price();
+            let total_value_usd = wallet.get_balance("USDZ") + (wallet.get_balance("ZUX") * current_price);
+            
+            blockchain_explorer::WalletInfo {
+                address: addr.clone(),
+                zux_balance: wallet.get_balance("ZUX"),
+                usdz_balance: wallet.get_balance("USDZ"),
+                total_value_usd,
+                transaction_count: 1, // Simplified
+                is_whale: wallet.trading_strategy.as_ref().map(|s| s.whale_mode).unwrap_or(false),
+                is_mega_whale: wallet.trading_strategy.as_ref().map(|s| s.mega_whale_mode).unwrap_or(false),
+                last_activity: current_time,
+            }
+        })
+        .collect();
+    
+    // Sort by total value (descending) - show all 1000 wallets
+    explorer_wallets.sort_by(|a, b| b.total_value_usd.partial_cmp(&a.total_value_usd).unwrap());
+    
+    // Convert system wallet data
+    let explorer_system_wallet = blockchain_explorer::SystemWalletInfo {
+        address: system_wallet.address.clone(),
+        zux_balance: system_wallet.get_balance("ZUX"),
+        usdz_balance: system_wallet.get_balance("USDZ"),
+        total_issued_zux: 1_000_000_000.0, // 1 billion ZUX initially created
+        total_issued_usdz: 5_000_000_000.0, // 5 billion USDZ initially created
+        active_wallets: wallets.len() as u64 - 1, // Exclude system wallet
+        total_transactions,
+        network_hash_rate: 1000.0, // Simulated hash rate
+        avg_block_time: 1.0, // Average ~1 second per block
+    };
+    
+    // Create the complete explorer data
+    let explorer_data = blockchain_explorer::ExplorerData {
+        blocks: explorer_blocks,
+        amm_info: explorer_amm,
+        wallets: explorer_wallets,
+        system_wallet: explorer_system_wallet,
+        last_update: current_time,
+    };
+    
+    // Write to JSON file
+    let json_data = serde_json::to_string_pretty(&explorer_data)
+        .map_err(|e| BlockchainError::System(format!("Failed to serialize explorer data: {}", e)))?;
+    
+    std::fs::write("explorer_data.json", json_data)
+        .map_err(|e| BlockchainError::Io(e))?;
+    
+    Ok(())
+}
+
 /// Run the blockchain simulation
 fn run_simulation() -> Result<()> {
     // Initialize logging
@@ -1858,6 +2166,10 @@ fn run_simulation() -> Result<()> {
     info!("\nStarting ZUX/USDZ price monitor in a separate terminal...");
     run_price_monitor(Arc::clone(&amm_pool), Arc::clone(&stop_signal))?;
     
+    // Start the blockchain explorer in a separate thread
+    info!("Starting blockchain explorer in a separate terminal...");
+    run_blockchain_explorer()?;
+    
     // Initialize trading strategies for all wallets
     let initial_price = amm_pool.lock().unwrap().get_zux_price();
     info!("\nInitializing trading strategies for all wallets with initial price: {:.6} USDZ", initial_price);
@@ -1868,6 +2180,9 @@ fn run_simulation() -> Result<()> {
         }
     }
     
+    // Create a vector to store all blocks for the explorer
+    let mut all_blocks: Vec<Block> = Vec::new();
+    
     // Now start the transaction simulation after block 3002
     info!("\nStarting transaction simulation after block 3002...");
     info!("Will simulate 10000 intelligent transactions with price-aware trading strategies.");
@@ -1877,6 +2192,7 @@ fn run_simulation() -> Result<()> {
     
     // Track the number of transactions
     let mut swap_count = 0;
+    let mut fees_collected = 0.0;
     let total_transactions = 10000;
     
     // Track wallet performance
@@ -1885,8 +2201,8 @@ fn run_simulation() -> Result<()> {
     // Track wallet participation statistics
     let mut total_zux_traded = 0.0;
     let mut total_usdz_traded = 0.0;
-    let mut max_trades_per_wallet = 0;
-    let mut min_trades_per_wallet = total_transactions;
+    let mut max_trades_per_wallet = 0usize;
+    let mut min_trades_per_wallet = total_transactions as usize;
     let mut wallet_trade_counts: HashMap<String, usize> = HashMap::new();
     
     // Record initial balances for performance tracking
@@ -1898,6 +2214,22 @@ fn run_simulation() -> Result<()> {
             );
         }
     }
+    
+    // Clone system wallet for explorer updates to avoid borrowing issues
+    let system_wallet_for_explorer = wallets.get(SYSTEM_WALLET_ADDRESS)
+        .ok_or_else(|| BlockchainError::Wallet("System wallet not found".to_string()))?
+        .clone();
+    
+    // Initial explorer data update
+    update_explorer_data(
+        &all_blocks,
+        &amm_pool_clone.lock().unwrap(),
+        &wallets,
+        &system_wallet_for_explorer,
+        current_block_id_counter,
+        swap_count,
+        fees_collected,
+    )?;
     
     while swap_count < total_transactions {
         // Create an intelligent swap based on trading strategy
@@ -1913,7 +2245,7 @@ fn run_simulation() -> Result<()> {
             output_amount
         );
         
-        let (new_block_hash, _) = create_block(
+        let (new_block_hash, block_content) = create_block(
             current_block_id_counter,
             &parent_hash_string,
             &[transaction], // Include the swap transaction
@@ -1923,6 +2255,22 @@ fn run_simulation() -> Result<()> {
             &swap_event
         )?;
         parent_hash_string = new_block_hash;
+        
+        // Store the block for the explorer
+        if let Ok(new_block) = Block::new(
+            current_block_id_counter,
+            &parent_hash_string,
+            &[],
+            network_name,
+            block_ver,
+            inception_year,
+            &swap_event
+        ) {
+            all_blocks.push(new_block);
+        }
+        
+        // Calculate fees collected (0.3% of trade volume)
+        fees_collected += input_amount * 0.003;
         
         // Track wallet participation
         *wallet_trade_counts.entry(wallet_address.clone()).or_insert(0) += 1;
@@ -1944,6 +2292,24 @@ fn run_simulation() -> Result<()> {
             let current_price = amm_pool_clone.lock().unwrap().get_zux_price();
             info!("Processed {} intelligent swaps ({:.1}% complete). Current ZUX price: {:.6} USDZ", 
                   swap_count, (swap_count as f64 / total_transactions as f64) * 100.0, current_price);
+            
+            // Update explorer data every 250 transactions
+            // Update the cloned system wallet with current data
+            let current_system_wallet = wallets.get(SYSTEM_WALLET_ADDRESS)
+                .ok_or_else(|| BlockchainError::Wallet("System wallet not found".to_string()))
+                .unwrap_or(&system_wallet_for_explorer);
+            
+            if let Err(e) = update_explorer_data(
+                &all_blocks,
+                &amm_pool_clone.lock().unwrap(),
+                &wallets,
+                current_system_wallet,
+                current_block_id_counter,
+                swap_count as u64,
+                fees_collected,
+            ) {
+                warn!("Failed to update explorer data: {}", e);
+            }
         }
         
         // Add a minimal delay to avoid overwhelming the system while allowing more transactions
@@ -1961,6 +2327,23 @@ fn run_simulation() -> Result<()> {
     
     // Now this code is reachable since we have a bounded loop
     *stop_signal.lock().unwrap() = true;
+    
+    // Final explorer data update
+    let final_system_wallet = wallets.get(SYSTEM_WALLET_ADDRESS)
+        .ok_or_else(|| BlockchainError::Wallet("System wallet not found".to_string()))
+        .unwrap_or(&system_wallet_for_explorer);
+        
+    if let Err(e) = update_explorer_data(
+        &all_blocks,
+        &amm_pool_clone.lock().unwrap(),
+        &wallets,
+        final_system_wallet,
+        current_block_id_counter,
+        swap_count as u64,
+        fees_collected,
+    ) {
+        warn!("Failed to update final explorer data: {}", e);
+    }
     
     info!("\nBlockchain simulation completed with {} transactions!", swap_count);
     info!("  - {} intelligent swaps with enhanced trading strategies", swap_count);
@@ -2101,6 +2484,17 @@ fn run_simulation() -> Result<()> {
         info!("    - ZUX: {:.2} → {:.2} ({:+.2})", initial_zux, final_zux, zux_change);
         info!("    - USDZ: {:.2} → {:.2} ({:+.2})", initial_usdz, final_usdz, usdz_change);
     }
+    
+    // Clean up temporary files for privacy and security
+    info!("\nCleaning up temporary files...");
+    
+    // Remove explorer data file
+    if let Err(e) = std::fs::remove_file("explorer_data.json") {
+        warn!("Failed to remove explorer data file: {}", e);
+    }
+    
+    info!("All temporary files have been removed for privacy and security.");
+    info!("Blockchain simulation completed successfully!");
     
     Ok(())
 }

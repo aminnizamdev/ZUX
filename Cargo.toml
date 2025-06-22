@@ -15,6 +15,10 @@ path = "src/main.rs"
 name = "price_monitor"
 path = "src/price_monitor.rs"
 
+[[bin]]
+name = "blockchain_explorer"
+path = "src/blockchain_explorer.rs"
+
 [dependencies]
 sha2 = "0.10" # SHA-2 cryptographic hash functions
 hex = "0.4"   # Convert hash bytes to a human-readable hex string
@@ -30,3 +34,5 @@ base64 = "0.13.0" # Base64 encoding/decoding
 tui = "0.19" # Terminal user interface library
 crossterm = "0.26" # Terminal manipulation library
 colored = "2.0" # Colored terminal text
+serde_json = "1.0" # JSON serialization/deserialization for data exchange
+serde = { version = "1.0", features = ["derive"] } # Serialization framework
