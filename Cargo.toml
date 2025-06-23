@@ -22,7 +22,7 @@ path = "src/blockchain_explorer.rs"
 [dependencies]
 sha2 = "0.10" # SHA-2 cryptographic hash functions
 hex = "0.4"   # Convert hash bytes to a human-readable hex string
-chrono = "0.4" # Time handling utilities
+chrono = { version = "0.4", features = ["serde"] } # Enhanced time handling utilities
 rand = "0.8.5" # Secure random number generation
 num-traits = "0.2" # Numeric trait implementations
 thiserror = "1.0" # Error handling utilities

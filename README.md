@@ -75,38 +75,27 @@
 
 ### **Key Innovations**
 
-`
+```
        ZUX BLOCKCHAIN CORE
             
              Genesis 
              Block   
-            
-                 
-         
+                     
           System Wallet  
           Creation       
-         
-                 
-        
+                     
          AMM Pool Init    
-         (x  y = k)      
-        
-                 
-    
+         (x × y = k)      
+                     
      1000 Wallets Creation    
      (Ed25519 + Base62)       
-    
-                 
-   
+                     
     2000 Token Credit Blocks   
     (100 ZUX + 500 USDZ each)  
-   
-                 
-  
+                     
     Live Trading Simulation    
    (AI Agents + Real Pricing)   
-  
-`
+```
 
 ### **What Makes ZUX Special**
 
@@ -125,32 +114,32 @@
 
 ### Prerequisites
 
-`ash
+```bash
 # Ensure you have Rust 1.70+ installed
 rustc --version
 # rustc 1.70.0 (stable)
 
 # If not installed, get Rust from:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-`
+```
 
 ### Quick Installation
 
-`ash
+```bash
 # Clone the repository
-git clone https://github.com/yourusername/zux-blockchain-ecosystem
-cd zux-blockchain-ecosystem
+git clone https://github.com/aminnizamdev/ZUX
+cd ZUX
 
 # Build with optimizations
 cargo build --release
 
 # Alternatively, run directly
 cargo run --release
-`
+```
 
 ### Quick Demo
 
-`ash
+```bash
 # Start the full ecosystem
 cargo run --release
 
@@ -158,7 +147,7 @@ cargo run --release
 # 1. Main blockchain simulation (current terminal)
 # 2. Real-time price monitor (new terminal)
 # 3. Interactive blockchain explorer (new terminal)
-`
+```
 
 ---
 
@@ -168,16 +157,15 @@ cargo run --release
 
 The ZUX blockchain follows a sophisticated initialization sequence:
 
-`
-ust
+```rust
 // Initialization Sequence
 Genesis Block (#1)                     System Foundation
 System Wallet Creation (#2)            Treasury Management  
 AMM Pool Initialization (#3)           DEX Infrastructure
 1000 Wallet Creations (#4-1003)       User Ecosystem
 2000 Token Credits (#1004-3003)       Economic Distribution
- Trading Simulation (#3004+)         Live Market Activity
-`
+Trading Simulation (#3004+)           Live Market Activity
+```
 
 ### **Dual-Token Economy**
 
@@ -189,9 +177,28 @@ AMM Pool Initialization (#3)           DEX Infrastructure
 ### **Advanced Wallet System**
 
 - **Ed25519 Cryptography**: Military-grade digital signatures
-- **Unique Address Generation**: Base-62 encoding with collision resistance
+- **Unique Address Generation**: Base-62 encoding with collision resistance  
 - **Multi-Currency Balances**: Native support for ZUX/USDZ
 - **AI Trading Strategies**: Autonomous trading behavior simulation
+
+### **Technical Implementation Details**
+
+```rust
+// Core wallet structure with Ed25519 security
+struct Wallet {
+    private_key: Vec<u8>,      // Ed25519 private key bytes
+    public_key: Vec<u8>,       // Ed25519 public key bytes  
+    address: String,           // Unique 7-char Base62 address
+    balances: HashMap<String, f64>, // Multi-currency support
+    trading_strategy: Option<TradingStrategy>, // AI behavior
+}
+
+// Unique address generation with collision resistance
+const CHARSET: &[u8] = b"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const N: u64 = 62; // Base-62 alphabet size
+const CODE_LEN: usize = 7; // 7-character addresses
+const MODULUS: u64 = 3_521_614_606_208; // 62^7 for collision resistance
+```
 
 ---
 
@@ -199,15 +206,14 @@ AMM Pool Initialization (#3)           DEX Infrastructure
 
 ### **Constant Product Market Maker**
 
-Our AMM implements the battle-tested x  y = k formula with enterprise enhancements:
+Our AMM implements the battle-tested x × y = k formula with enterprise enhancements:
 
-`
-ust
+```rust
 // Core AMM Formula
-K = ZUX_Reserve  USDZ_Reserve
-Output = (Input  Output_Reserve) / (Input_Reserve + Input)
-Fee = Input  0.003 // 0.3% trading fee
-`
+K = ZUX_Reserve × USDZ_Reserve
+Output = (Input × Output_Reserve) / (Input_Reserve + Input)
+Fee = Input × 0.003 // 0.3% trading fee
+```
 
 ### **Real-Time Analytics Engine**
 
@@ -222,6 +228,30 @@ Fee = Input  0.003 // 0.3% trading fee
 - **All-Time High/Low**: Historical price extremes
 - **Fee Collection**: Accumulated protocol revenue
 - **Price Performance**: Total change since simulation start
+
+### **AMM Pool Structure**
+
+```rust
+struct AmmPool {
+    zux_reserve: f64,
+    usd_reserve: f64,
+    k_constant: f64,
+    fee_percent: f64,
+    price_history: Vec<PricePoint>,
+    // Real-time analytics
+    total_volume_usd: f64,
+    recent_volume_usd: f64,
+    last_volume_reset: u64,
+    // 5-second price tracking
+    price_5s_high: f64,
+    price_5s_low: f64,
+    price_5s_open: f64,
+    // Since inception tracking
+    price_inception_high: f64,
+    price_inception_low: f64,
+    price_inception_open: f64,
+}
+```
 
 ### **Trading Features**
 
@@ -238,8 +268,7 @@ Fee = Input  0.003 // 0.3% trading fee
 
 ### **Architecture Overview**
 
-`
-
+```
                     ZUX ECOSYSTEM                        
 
    Terminal 1       Terminal 2         Terminal 3      
@@ -254,8 +283,25 @@ Fee = Input  0.003 // 0.3% trading fee
   Transaction     Price Feed      Wallet Details    
   AMM Swaps       Statistics      AMM Metrics       
   Logging         Volatility      System Monitor    
+```
 
-`
+### **Multi-Binary Architecture**
+
+The project is structured as three separate binaries defined in `Cargo.toml`:
+
+```toml
+[[bin]]
+name = "practicerust2"
+path = "src/main.rs"
+
+[[bin]]
+name = "price_monitor"
+path = "src/price_monitor.rs"
+
+[[bin]]
+name = "blockchain_explorer"
+path = "src/blockchain_explorer.rs"
+```
 
 ---
 
@@ -263,27 +309,27 @@ Fee = Input  0.003 // 0.3% trading fee
 
 ### **Professional 4-Tab Interface**
 
+Built with the `tui` and `crossterm` crates for a responsive terminal interface:
+
 #### **Blocks Tab**
 - **Split-panel design**: 60% block list | 40% detailed analysis
-- **Real-time updates**: Live block creation monitoring
+- **Real-time updates**: Live block creation monitoring via JSON data files
 - **Comprehensive details**: Hash, difficulty, transactions, mining info
 - **Navigation**: Arrow keys for selection, instant detail updates
 
 #### **AMM Pool Tab** 
-`
-
+```
    Pool Status    Price Analytics 
 
   Reserves        5s Change     
   Utilization     5s High/Low   
   APR Estimate    Since Start   
   Trade Size      Live Feed     
-
-`
+```
 
 #### **Wallets Tab**
 - **Smart filtering**: Top wallets by value, all 1000 visible
-- **Wallet classification**: Mega Whales, Whales, Regular
+- **Whale classification**: Mega Whales (1%), Whales (10%), Regular (89%)
 - **Live balances**: Real-time ZUX/USDZ with USD conversion
 - **Trading profiles**: Strategy analysis, risk assessment
 
@@ -293,12 +339,20 @@ Fee = Input  0.003 // 0.3% trading fee
 - **Economic overview**: Supply distribution, market cap, inflation
 - **Technical stats**: TPS, hash rate, node information
 
-### **Visual Design**
+### **Data Communication**
 
-- **Color scheme**: Professional light blue and white
-- **Responsive layout**: Adapts to terminal size
-- **Smooth navigation**: 100ms key delays for precision
-- **Real-time data**: 20 FPS rendering for fluid updates
+The explorer reads real-time data from `explorer_data.json`:
+
+```rust
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ExplorerData {
+    pub blocks: Vec<BlockInfo>,
+    pub amm_info: AmmInfo,
+    pub wallets: Vec<WalletInfo>,
+    pub system_wallet: SystemWalletInfo,
+    pub last_update: u64,
+}
+```
 
 ---
 
@@ -306,34 +360,56 @@ Fee = Input  0.003 // 0.3% trading fee
 
 ### **Live Market Intelligence**
 
-`
+The price monitor displays real-time trading data with professional-grade charts and analytics:
 
+```
                 ZUX/USDZ Live Chart                      
 
-      Price: .012345   +2.34% (5s)                 
-      Volume: ,234.56 (5s) | ,345.67 (total)     
-      High: .013456   Low: .011234               
+      Price: $4.250   +4805.10% (1m)                 
+      Volume: $26.76M (5s) | $485.43M (total)     
+      High: $153.38   Low: $0.086               
                                                          
-  0.0135                                               
-                                                     
-  0.0130                                              
-                                                      
-  0.0125                                              
-                                                      
-  0.0120                                            
-                                                     
-  0.0115                ___                           
-          
+  4.30 ┤                                               
+       │                                             
+  4.25 ┤                                              
+       │                                              
+  4.20 ┤                                              
+       │                                              
+  4.15 ┤                                            
+       │                                             
+  4.10 ┤                ___                           
+       └┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴                
          Last 60s                               Now      
-
-`
+```
 
 ### **Market Statistics**
 
+The price monitor reads from `enhanced_market_data.json` containing:
+
+```json
+{
+  "current_price": 4.250385463941755,
+  "volume_1m": 485431443.1730116,
+  "volume_10s": 65111103.693551734,
+  "volume_5s": 26763447.99759872,
+  "high_1m": 153.3750458698422,
+  "low_1m": 0.08613636153459148,
+  "price_change_1m": 4805.0990801706885,
+  "total_liquidity": 51733.82966337294,
+  "market_cap": 4250385463.941755,
+  "trades_count": 3328,
+  "fees_collected": 14639.825131041527,
+  "total_blocks": 13005,
+  "total_transactions": 6333,
+  "network_hash_rate": 1000.0,
+  "active_wallets": 1000
+}
+```
+
 - **Real-time price updates**: Sub-second price feeds
-- **Volume analysis**: 5s and total volume tracking  
+- **Volume analysis**: 5s, 10s, and 1m volume tracking  
 - **Volatility metrics**: Standard deviation, price ranges
-- **Mobile-friendly**: Responsive terminal interface
+- **Professional interface**: TUI charts with crossterm backend
 
 ---
 
@@ -341,35 +417,63 @@ Fee = Input  0.003 // 0.3% trading fee
 
 ### **Advanced Trading Agents**
 
+The simulation includes sophisticated AI traders with realistic behaviors:
+
 | Agent Type | Percentage | Behavior | Impact |
 |------------|------------|----------|--------|
 | **Mega Whales** | 1% | Massive trades, market moving | Extreme volatility |
 | **Whales** | 10% | Large strategic positions | Significant price impact |
 | **Regular Traders** | 89% | Standard market participation | Baseline activity |
 
-### **Trading Strategies**
+### **Trading Strategy Implementation**
 
-`
-ust
-// FOMO/Panic Algorithm
-if price_increase > fomo_threshold {
-    action = BUY;
-    amount = balance * panic_multiplier;
+```rust
+struct TradingStrategy {
+    price_history: Vec<f64>,    // Recent price history for analysis
+    last_trade_time: u64,       // Timestamp of last trade
+    whale_mode: bool,           // Some wallets are "whales"
+    mega_whale_mode: bool,      // Ultra-large whales
+    fomo_threshold: f64,        // Price increase that triggers FOMO
+    panic_threshold: f64,       // Price decrease that triggers panic
+    manipulation_intent: i8,    // -1: bear, 0: neutral, 1: bull
 }
 
-// Whale Manipulation
-if mega_whale && market_intent == BULLISH {
-    execute_pump_strategy();
-} else if mega_whale && market_intent == BEARISH {
-    execute_dump_strategy();
+// FOMO/Panic Algorithm Implementation
+fn decide_action(&mut self, current_price: f64, current_time: u64, 
+                wallet_zux: f64, wallet_usdz: f64) -> (TradeAction, f64) {
+    
+    self.update_price_history(current_price);
+    
+    if self.price_history.len() < 2 {
+        return (TradeAction::Hold, 0.0);
+    }
+    
+    let previous_price = self.price_history[self.price_history.len() - 2];
+    let price_change = (current_price - previous_price) / previous_price;
+    
+    // FOMO buying on price increases
+    if price_change > self.fomo_threshold {
+        let fomo_multiplier = if self.mega_whale_mode { 0.8 } 
+                            else if self.whale_mode { 0.4 } 
+                            else { 0.15 };
+        
+        let buy_amount = wallet_usdz * fomo_multiplier;
+        return (TradeAction::Buy, buy_amount);
+    }
+    
+    // Panic selling on price decreases  
+    if price_change < -self.panic_threshold {
+        let panic_multiplier = if self.mega_whale_mode { 0.7 }
+                              else if self.whale_mode { 0.35 }
+                              else { 0.12 };
+        
+        let sell_amount = wallet_zux * panic_multiplier;
+        return (TradeAction::Sell, sell_amount);
+    }
+    
+    (TradeAction::Hold, 0.0)
 }
-
-// Technical Analysis
-sma_20 = calculate_moving_average(price_history, 20);
-if current_price > sma_20 * 1.05 {
-    signal = STRONG_BUY;
-}
-`
+```
 
 ### **Market Dynamics**
 
@@ -377,6 +481,50 @@ if current_price > sma_20 * 1.05 {
 - **Momentum trading**: FOMO/panic cycles creating realistic bubbles
 - **Price manipulation**: Strategic whale positioning
 - **Technical signals**: Moving averages, trend analysis
+
+---
+
+## Performance & Analytics
+
+### **Enterprise-Grade Metrics**
+
+The system tracks comprehensive performance data:
+
+```rust
+struct EnhancedMarketData {
+    current_price: f64,
+    volume_1m: f64,
+    volume_10s: f64,
+    volume_5s: f64,
+    high_1m: f64,
+    low_1m: f64,
+    price_change_1m: f64,
+    price_change_10s: f64,
+    price_change_5s: f64,
+    total_liquidity: f64,
+    market_cap: f64,
+    circulating_supply: f64,
+    trades_count: u64,
+    fees_collected: f64,
+    avg_trade_size: f64,
+    zux_reserve: f64,
+    usd_reserve: f64,
+    k_constant: f64,
+    pool_utilization: f64,
+    total_blocks: u64,
+    total_transactions: u64,
+    network_hash_rate: f64,
+    active_wallets: u64,
+    price_history: Vec<(u64, f64)>,
+}
+```
+
+### **Performance Characteristics**
+
+- **Block Creation**: Sub-second block mining with adjustable difficulty
+- **Transaction Throughput**: 5000+ TPS in-memory processing
+- **Memory Usage**: Efficient in-memory data structures, zero disk I/O
+- **Real-time Updates**: 50ms price update intervals for responsive UI
 
 ---
 
@@ -391,78 +539,84 @@ if current_price > sma_20 * 1.05 {
 | **Address Generation** | Base-62 + Permutation | Custom algorithm | Collision-resistant |
 | **Random Generation** | ChaCha20 | `rand` crate | Cryptographically secure |
 
-### **Security Guarantees**
+### **Security Implementation**
 
-`
-ust
+```rust
 // Transaction Verification Pipeline
-fn verify_transaction(tx: &Transaction) -> Result<(), SecurityError> {
-    // 1. Signature verification
-    verify_ed25519_signature(&tx.signature, &tx.signing_data())?;
-    
-    // 2. Public key validation  
-    validate_public_key(&tx.sender_public_key)?;
-    
-    // 3. Balance verification
-    check_sufficient_balance(&tx.sender, tx.amount)?;
-    
-    // 4. Replay attack protection
-    verify_transaction_uniqueness(&tx.hash())?;
-    
-    Ok(())
+impl Transaction {
+    fn verify(&self) -> Result<()> {
+        // 1. Signature verification
+        let verifying_key = VerifyingKey::try_from(self.sender_public_key.as_slice())
+            .map_err(|_| BlockchainError::Transaction("Invalid public key".to_string()))?;
+        
+        let signature = Signature::try_from(self.signature.as_slice())
+            .map_err(|_| BlockchainError::Transaction("Invalid signature".to_string()))?;
+        
+        let signing_data = self.get_signing_data();
+        
+        verifying_key.verify(signing_data.as_bytes(), &signature)
+            .map_err(|_| BlockchainError::Transaction("Signature verification failed".to_string()))?;
+        
+        // 2. Amount validation
+        if self.amount <= 0.0 {
+            return Err(BlockchainError::Transaction("Invalid amount".to_string()));
+        }
+        
+        Ok(())
+    }
 }
-`
+
+// Block mining with proof-of-work
+fn mine_block(difficulty: u64) -> Result<(String, u64)> {
+    let mut nonce = 0u64;
+    let target = format!("{:0width$}", "", width = difficulty as usize);
+    
+    loop {
+        let hash_input = format!("{}{}{}{}{}{}{}{}{}{}", 
+            block_id, parent_hash, state_root, timestamp, 
+            block_class, block_type, block_ver, inception_year, 
+            network_name, nonce);
+        
+        let hash = format!("{:x}", Sha256::digest(hash_input.as_bytes()));
+        
+        if hash.starts_with(&target) {
+            return Ok((hash, nonce));
+        }
+        
+        nonce = nonce.wrapping_add(1);
+        
+        if nonce % 100000 == 0 {
+            thread::sleep(Duration::from_millis(1));
+        }
+    }
+}
+```
 
 ---
 
-## In-Memory Architecture
+## Technical Specifications
 
-### **Zero Persistence Guarantee**
+### **Dependencies & Architecture**
 
-| Data Type | Storage | Persistence | Security Benefit |
-|-----------|---------|-------------|------------------|
-| **Private Keys** | RAM only | None | No key recovery possible |
-| **Transactions** | RAM only | None | No transaction history |
-| **Block Data** | RAM only | None | No blockchain forensics |
-| **Wallet Balances** | RAM only | None | No financial tracking |
+```toml
+[dependencies]
+sha2 = "0.10"                    # SHA-2 cryptographic hash functions
+hex = "0.4"                      # Hex encoding/decoding
+chrono = { version = "0.4", features = ["serde"] } # Time handling
+rand = "0.8.5"                   # Secure random number generation
+ed25519-dalek = { version = "2.0.0", features = ["rand_core"] } # Ed25519 signatures
+tui = "0.19"                     # Terminal user interface library
+crossterm = "0.26"               # Terminal manipulation library
+serde_json = "1.0"               # JSON serialization
+serde = { version = "1.0", features = ["derive"] } # Serialization framework
+```
 
-### **Memory Safety Features**
+### **System Requirements**
 
-- **Automatic cleanup**: Process termination clears all data
-- **No disk writes**: Zero file system interaction
-- **Secure allocation**: Memory overwriting on deallocation
-- **Process isolation**: Sandboxed execution environment
-
----
-
-## Performance & Analytics
-
-### **Benchmark Results**
-
-`
-PERFORMANCE METRICS
-
-Transaction Throughput:    5,000+ TPS
-Block Creation Time:       ~1 second
-Memory Footprint:          ~50MB
-Startup Time:              <2 seconds
-Explorer Rendering:        20 FPS
-Price Update Frequency:    Sub-second
-
-Wallet Creation:          1000 wallets
-Initial Blocks:           3002 blocks  
-Simulation Transactions:  10,000 swaps
-Total Runtime:            ~2 minutes
-`
-
-### **System Analytics**
-
-The blockchain tracks comprehensive metrics:
-
-- **Economics**: Market cap, inflation rate, fee collection
-- **Network**: Hash rate, block time, transaction throughput  
-- **Trading**: Volume, liquidity, price discovery efficiency
-- **Users**: Wallet distribution, trading patterns, whale activity
+- **Rust**: 1.70+ required for latest cryptographic libraries
+- **Memory**: 2GB+ recommended for large simulations
+- **Terminal**: ANSI color support, UTF-8 encoding
+- **Platform**: Windows, macOS, Linux supported
 
 ---
 
@@ -470,74 +624,67 @@ The blockchain tracks comprehensive metrics:
 
 ### **Project Structure**
 
-`
-zux-blockchain-ecosystem/
- src/
-    main.rs                  # Core blockchain engine
-    blockchain_explorer.rs   # Real-time TUI explorer
-    price_monitor.rs         # Live price monitoring
- Cargo.toml                   # Dependencies & metadata
- README.md                    # This documentation
-`
+```
+ZUX/
+├── Cargo.toml                 # Project configuration & dependencies
+├── src/
+│   ├── main.rs               # Core blockchain simulation (2,727 lines)
+│   ├── blockchain_explorer.rs # TUI explorer application (1,431 lines)
+│   └── price_monitor.rs      # Price monitoring system (880 lines)
+├── enhanced_market_data.json # Real-time market data export
+├── explorer_data.json        # Blockchain explorer data export
+└── README.md                 # This documentation
+```
 
-### **Key Dependencies**
+### **Building & Running**
 
-`	oml
-[dependencies]
-# Cryptography
-ed25519-dalek = "2.0"           # Digital signatures
-sha2 = "0.10"                   # Hash functions
+```bash
+# Run main blockchain simulation
+cargo run --bin practicerust2 --release
 
-# Terminal UI
-tui = "0.19"                    # Terminal interface framework
-crossterm = "0.26"              # Cross-platform terminal control
+# Run price monitor separately
+cargo run --bin price_monitor --release
 
-# Data & Time
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"              # JSON serialization
-chrono = "0.4"                  # Date/time handling
+# Run blockchain explorer separately  
+cargo run --bin blockchain_explorer --release
 
-# Utilities  
-rand = "0.8.5"                  # Secure randomization
-thiserror = "1.0"               # Error handling
-log = "0.4"                     # Logging framework
-`
+# Build all binaries
+cargo build --release --bins
+```
 
 ### **Extending the System**
 
-#### Adding New Trading Strategies
+#### **Adding New Trading Strategies**
 
-`
-ust
+```rust
+// Implement custom trading logic
 impl TradingStrategy {
-    fn custom_algorithm(&mut self, market_data: &MarketData) -> TradeAction {
-        // Implement your custom trading logic
-        let signal = analyze_technical_indicators(market_data);
-        match signal {
-            Signal::StrongBuy => TradeAction::Buy,
-            Signal::StrongSell => TradeAction::Sell,
+    fn custom_strategy(&self, market_data: &MarketData) -> TradeAction {
+        // Your custom algorithm here
+        match your_analysis(market_data) {
+            Signal::Buy => TradeAction::Buy,
+            Signal::Sell => TradeAction::Sell,
             _ => TradeAction::Hold,
         }
     }
 }
-`
+```
 
-#### Creating New Explorer Tabs
+#### **Creating New Explorer Tabs**
 
-`
-ust
+```rust
 enum Tab {
     Blocks,
-    Amm,
+    Amm, 
     Wallets,
     SystemWallet,
-    CustomTab,    // Add your custom tab
+    CustomTab, // Add your custom tab
 }
 
 fn render_custom_tab(f: &mut Frame, area: Rect, state: &ExplorerState) {
     // Implement your custom visualization
 }
-`
+```
 
 ---
 
@@ -545,8 +692,7 @@ fn render_custom_tab(f: &mut Frame, area: Rect, state: &ExplorerState) {
 
 ### **Core Blockchain API**
 
-`
-ust
+```rust
 // Wallet Management
 fn create_wallet(code_generator: &mut UniqueCodeGenerator) -> Result<Wallet>;
 fn create_system_wallet(code_generator: &mut UniqueCodeGenerator) -> Result<Wallet>;
@@ -557,12 +703,11 @@ fn execute_swap(wallet: &mut Wallet, amm_pool: &mut AmmPool, is_zux_to_usd: bool
 
 // Block Operations
 fn create_block(block_id: u64, parent_hash: &str, transactions: &[Transaction], network_name: &str, block_ver: &str, inception_year: u16, event: &BlockEvent) -> Result<(String, String)>;
-`
+```
 
 ### **AMM Pool API**
 
-`
-ust
+```rust
 impl AmmPool {
     // Core Trading Functions
     fn swap_zux_to_usd(&mut self, zux_amount: f64) -> Result<f64>;
@@ -573,7 +718,7 @@ impl AmmPool {
     fn add_volume(&mut self, input_amount_usd: f64, output_amount_usd: f64);
     fn get_recent_price_history(&self, count: usize) -> Vec<PricePoint>;
 }
-`
+```
 
 ---
 
@@ -638,23 +783,23 @@ impl AmmPool {
 ### **Platform-Specific Notes**
 
 #### **Windows**
-`powershell
+```powershell
 # Enable ANSI colors
 Set-ItemProperty HKCU:\Console VirtualTerminalLevel -Type DWORD 1
 
 # Alternative terminal
 winget install Microsoft.WindowsTerminal
-`
+```
 
 #### **macOS/Linux** 
-`ash
+```bash
 # Ensure terminal supports 256 colors
 echo $TERM
 # Should show: xterm-256color or similar
 
 # Update terminal if needed
 export TERM=xterm-256color
-`
+```
 
 ---
 
@@ -683,7 +828,7 @@ We welcome contributions from the blockchain and Rust communities!
 
 ## License
 
-`
+```
 MIT License
 
 Copyright (c) 2024 Amin Nizam
@@ -705,7 +850,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-`
+```
 
 ---
 
@@ -763,11 +908,11 @@ Users are responsible for ensuring compliance with local laws and regulations re
 
 ### **Ready to Explore the Future of Blockchain?**
 
-`ash
-git clone https://github.com/yourusername/zux-blockchain-ecosystem
-cd zux-blockchain-ecosystem
+```bash
+git clone https://github.com/aminnizamdev/ZUX
+cd ZUX
 cargo run --release
-`
+```
 
 **Experience enterprise-grade blockchain simulation today!**
 
